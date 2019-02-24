@@ -5,21 +5,17 @@
  */
 package db;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import domain.DomainObject;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.Calendar;
-import java.util.Properties;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.util.converter.LocalDateTimeStringConverter;
 
 /**
  *
@@ -54,7 +50,7 @@ public class DBBroker {
     }
     
     
-    public void opentConnection() throws SQLException{
+    public void openConnection() throws SQLException{
         conn = DriverManager.getConnection(hostURL, user, pwd);
         conn.setAutoCommit(false);
         Logger.getLogger(DBBroker.class.getName()).log(Level.INFO, "Conection to DB established " + (new SimpleDateFormat("dd.MM.yyy. HH:mm:ss").format(Calendar.getInstance().getTime())));
@@ -64,9 +60,38 @@ public class DBBroker {
     public void closeConnection(){
         try {
             conn.close();
+            Logger.getLogger(DBBroker.class.getName()).log(Level.INFO, "Conection to DB closed " + (new SimpleDateFormat("dd.MM.yyy. HH:mm:ss").format(Calendar.getInstance().getTime())));
         } catch (SQLException ex) {
             Logger.getLogger(DBBroker.class.getName()).log(Level.SEVERE, null, ex);
             conn = null;
         }
+    }
+    
+    public LinkedList<DomainObject> select(DomainObject domainObject) throws SQLException{
+        PreparedStatement ps = conn.prepareStatement(domainObject.getSelect());
+        System.out.println(domainObject.getSelect());
+        return domainObject.select(ps.executeQuery());
+    }
+    
+    public boolean insert(DomainObject domainObject) throws SQLException{
+        PreparedStatement ps = conn.prepareStatement(domainObject.insert());
+        System.out.println(domainObject.insert());
+        ps.executeUpdate();
+        return true;
+    }
+    
+    public boolean delete(DomainObject domainObject) throws SQLException{
+        PreparedStatement ps = conn.prepareStatement(domainObject.delete());
+        System.out.println(domainObject.delete());
+        ps.executeUpdate();
+        return true;
+    }
+    
+    public void commit() throws SQLException{
+        conn.commit();
+    }
+    
+    public void rollback() throws SQLException{
+        conn.rollback();
     }
 }
